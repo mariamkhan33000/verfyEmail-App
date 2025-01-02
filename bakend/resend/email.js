@@ -1,3 +1,4 @@
+import { subtle } from "crypto";
 import resend from "./config.js";
 import { verificationTokenEmailTemplate, WELCOME_EMAIL_TEMPLATE } from "./email-templates.js";
 
@@ -45,4 +46,21 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
     } catch (error) {
         console.log("error reset password email", error);
     }
+}
+
+export const sendResetSuccessEmail = async (email) => {
+    try {
+        const { data, error } = await resend.emails.send({
+          from: "Acme <onboarding@resend.dev>",
+          to: [email],
+          subject: "Password Reset Was Successful",
+          html: `Your password was reset successfully`,
+        });
+        res
+      .status(200)
+      .json({ success: true, message: "Password reset successfully" });
+      } catch (error) {
+        console.log("error resetting password", error);
+    res.status(400).json({ success: false, message: error.message });
+      }
 }

@@ -143,3 +143,48 @@ export const login = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
     }
   }
+
+  export const resetPassword = async (req, res) => {
+    try {
+      const {token}  = req.params;
+      const {password} = req.body;
+      const user = await User.findOne({
+        resetPasswordToken : token,
+        resetPasswordExpiresAt: { $gt: Date.now() }
+      })
+      if(!user) {
+        return res.status(400).json({success : false, message: "Invalid or expired reset token"})
+      }
+    
+      const hashedPassword = await bcrypt.hash(password, 10)
+      user.password = hashedPassword;
+      user.resetPasswordToken = undefined,
+      user.resetPasswordExpiresAt = undefined;
+      await user.save()
+
+      await sendResetSuccessEmail(user.email)
+    } catch (error) {
+      
+    }
+  }
+
+
+  export const checkAuth = async (req, res) => {
+    try {
+      const user = await User.findById(req.userId);
+      if (!user) {
+        return res
+          .status(400)
+          .json({ success: false, message: "User not found" });
+      }
+  
+      res
+        .status(200)
+        .json({ success: true, user: { ...user._doc, password: undefined } });
+    } catch (error) {
+      console.log("error checking auth", error);
+      res.status(400).json({ success: false, message: error.message });
+    }
+  };
+
+  
